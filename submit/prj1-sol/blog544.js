@@ -148,10 +148,10 @@ for(var i in this.users){
 if(this.users[i].id===obj.id){
 	//console.log("found user");
 	//console.log(this.users[i]);
-	res=this.users[i];
-	//res.push(this.users[i]);
-	console.log(res);
-	//return res;
+	//res=this.users[i];
+	res.push(this.users[i]);
+	//console.log(res);
+	return res;
 }
 }
 //console.log(res);
