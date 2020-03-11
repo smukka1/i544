@@ -29,6 +29,10 @@ export default class Validator {
     for (const [name, value] of Object.entries(obj)) {
       required.delete(name);
       const info = infos[name];
+	if(name=== '_id'){
+	const msg=`the internal mongo ${name} field is forbidden for users create`;
+	throw [new BlogError('BAD_FIELD', msg)];
+	}
       if (forbidden.has(name)) {
 	const msg = `the ${info.friendlyName} field is forbidden ${msgSuffix}`;
 	errors.push(new BlogError('BAD_FIELD', msg));

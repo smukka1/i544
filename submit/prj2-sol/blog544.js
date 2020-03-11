@@ -59,12 +59,6 @@ export default class Blog544 {
   static async make(meta, options) {
 	//console.log("in make");
 	//const url=options.dbUrl;
-	/*console.log("abcccc"+options.dbUrl.split('/').slice(0,3));
-	const url=options.dbUrl.split('/').slice(0,3).join('/');
-	console.log("after splitting" +url);
-	
-	const proj_db=options.dbUrl.split('/').slice(3,4).join('/');
-	console.log("dbbbb is"+proj_db);*/
 	
 	const url=options.dbUrl.slice(0,options.dbUrl.lastIndexOf('/'));
 	//console.log("mongo url is " +url);
@@ -104,6 +98,16 @@ export default class Blog544 {
 	const users_collection=this.db.collection("users");
 	const articles_collection=this.db.collection("articles");
 	const comments_collection=this.db.collection("comments");
+	users_collection.createIndex({email:1});
+	users_collection.createIndex({firstName:1});
+	users_collection.createIndex({lastName:1});
+	users_collection.createIndex({creationTime:-1});
+	articles_collection.createIndex({authorId:1});
+	articles_collection.createIndex({creationTime:-1});
+	comments_collection.createIndex({articleId:1});
+	comments_collection.createIndex({commenterId:1});
+	comments_collection.createIndex({creationTime:-1});
+
 
 	if(category === 'users'){
 		//const abc=this.db.collection("users");
@@ -174,9 +178,9 @@ export default class Blog544 {
 		}else if(obj.email){
 			result= await this.db.collection("users").find({'email':obj.email}).toArray();
 		}else if(obj.firstName){
-			result= await this.db.collection("users").find({'firstName':obj.firstName}).toArray();
+			result= await this.db.collection("users").find({'firstName':obj.firstName}).limit(DEFAULT_COUNT).toArray();
 		}else if(obj.lastName){
-			result= await this.db.collection("users").find({'lastName':obj.lastName}).toArray();
+			result= await this.db.collection("users").find({'lastName':obj.lastName}).limit(DEFAULT_COUNT).toArray();
 		}else if(obj._count){
 			result= await this.db.collection("users").find().sort({'creationTime':-1}).limit(parseInt(obj._count)).toArray();
 		}else if(obj.creationTime){
@@ -193,7 +197,7 @@ export default class Blog544 {
 		}else if(obj.authorId){
 			result= await this.db.collection("articles").find({'authorId':obj.authorId}).toArray();
 		}else if(obj.keywords){
-			result= await this.db.collection("articles").find({'keywords':obj.keywords}).toArray();
+			result= await this.db.collection("articles").find({'keywords':{$in:obj.keywords}}).limit(DEFAULT_COUNT).toArray();
 		}else if(obj.creationTime){
 			result= await this.db.collection("articles").find({'creationTime':{$lte:obj.creationTime}}).sort({'creationTime':-1}).limit(DEFAULT_COUNT).toArray();
 		}
