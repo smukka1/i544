@@ -170,6 +170,8 @@ export default class Blog544 {
     const obj = this.validator.validate(category, 'find', findSpecs);
 	//console.log("object isssss"+typeof(obj._count));
     var result;
+let index=obj['_index'];
+let count=obj['_count'];
     //@TODO
 	if(category==='users'){
 		if(obj.id){
@@ -182,7 +184,7 @@ export default class Blog544 {
 		}else if(obj.lastName){
 			result= await this.db.collection("users").find({'lastName':obj.lastName}).limit(DEFAULT_COUNT).toArray();
 		}else if(obj._count){
-			result= await this.db.collection("users").find().sort({'creationTime':-1}).limit(parseInt(obj._count)).toArray();
+			result= await this.db.collection("users").find().sort({'creationTime':-1}).limit(parseInt(obj._count)).skip(parseInt(index)).limit(parseInt(count)).toArray();
 		}else if(obj.creationTime){
 			result= await this.db.collection("users").find({'creationTime':{$lte:obj.creationTime}}).sort({'creationTime':-1}).limit(DEFAULT_COUNT).toArray();
 		}else{
