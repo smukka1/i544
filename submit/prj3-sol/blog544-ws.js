@@ -60,9 +60,16 @@ app.delete('/'+metaKeys[category]+'/:id',deleteCategory(app,metaKeys[category]))
 //@TODO
 function doEmpty(app){
 	return errorWrap( async function(req,res){
-		const q= req.query || {}
+		const results={};
+		results.links=[];
 		try{
-			//const results =  await app.locals;
+			//const results =  await app.locals.port;
+
+			results.links.push(getselfLink(req));
+			results.links.push({name:"describe body", rel:"meta",url:requestUrl(req) + '/meta'});
+			results.links.push({name:"collection", rel:"users",url:requestUrl(req) + '/users'});
+			results.links.push({name:"collection", rel:"articles",url:requestUrl(req) + '/articles'});
+			results.links.push({name:"collection", rel:"comments",url:requestUrl(req) + '/comments'});
 			res.json(results);
 		}catch(err){
 			const mapped= mapError(err);
@@ -76,6 +83,8 @@ function doMeta(app){
 		const q= req.query || {}
 		try{
 			const results =  await app.locals.meta;
+			results.links=[];
+			results.links.push(getselfLink(req));
 			res.json(results);
 		}catch(err){
 			const mapped= mapError(err);
@@ -87,13 +96,35 @@ function doMeta(app){
 
 function getCategory(app,cat){
 	return errorWrap( async function(req,res){
-	 // const cat = req.path.substring(1);
-	//console.log(req.path);
-	//console.log(cat);
+
 		const q= req.query || {}
+		var results_final={};
+		var links=[];
 		try{
 			const results =  await app.locals.model.find(cat,q);
-			res.json(results);
+			/*for(let i in results){
+			console.log('iddddddddd',i.id,results[i].id);
+			console.log(requestUrl(req) + '/' +results[i].id);
+			links.push(getselfLink(req)+'/'+results[i].id);
+			}
+			console.log('linkssss',links);*/
+			for(let i in results){
+
+				results[i].links=[{name:"self", rel:"self",url:requestUrl(req) + '/' +results[i].id}];
+			}
+			results_final={[cat]:results};
+			res.json(results_final);
+			/*var url=requestUrl(req);
+			var links=[{name:"self", rel:"rel", url:url}];
+			//results.links.push(getselfLink(req));
+			//res.links(results.links);
+			//console.log(results.links);
+			res_obj=results;
+			res_obj.links=links;
+			console.log(res_obj);
+			//res.links(links);
+			res.json(res_obj);
+			//console.log(res);*/
 		}catch(err){
 			const mapped= mapError(err);
 			res.status(mapped.status).json(mapped);
@@ -103,15 +134,32 @@ function getCategory(app,cat){
 
 function getCategoryById(app,cat){
 	return errorWrap( async function(req,res){
-	//const cat = req.path.substring(1,req.path.lastIndexOf('/'));
 	const id=req.params.id;
-	//console.log(req.path);
-	//console.log(cat);
-	//console.log(id);
-	//const q= req.query || {}
+	var results_final={};
+	var links=[];
+	 //results_final.links=[];
+	
 		try{
 			const results =  await app.locals.model.find(cat,{id:id});
-			res.json(results);
+			links.push(getselfLink(req));
+			results[0].links=links;
+			//console.log('resultsss',results);
+			/*results_final=results;
+			results_final.links.push(getselfLink(req));
+			results.links=[];
+			results.links=(getselfLink(req));
+			console.log('resultssss',results);
+			links.push(getselfLink(req));
+			results_final=results;
+			results_final.links=links;
+			console.log('resultsss_finalllll',results_final);*/
+			results_final={[cat]:results};
+			//console.log('resultsss finallll',results_final);
+			//links.push(getselfLink(req));
+			//results.links=links;
+			//results_final.[cat][0].links=links;
+			res.json(results_final);
+			
 		}catch(err){
 			const mapped= mapError(err);
 			res.status(mapped.status).json(mapped);
@@ -128,6 +176,7 @@ function createCategory(app,cat){
 
 		try{
 			const results =  await app.locals.model.create(cat,obj);
+			res.append('Location', requestUrl(req) + '/' + obj.id);
 			res.json(results);
 		}catch(err){
 			const mapped= mapError(err);
@@ -161,10 +210,6 @@ function deleteCategory(app,cat){
 	return errorWrap( async function(req,res){
 
 	const id=req.params.id;
-	//console.log(id);
-	//const patch=Object.assign({},req.body);
-	//patch.id=id;
-	//console.log(patch);
 		try{
 			const results =  await app.locals.model.remove(cat,{id:id});
 			res.json(results);
@@ -173,6 +218,13 @@ function deleteCategory(app,cat){
 			res.status(mapped.status).json(mapped);
 		}
 	});
+}
+
+
+function getselfLink(req){
+	var url=requestUrl(req);
+	var selfLink={name:"self", rel:"self",url:url};
+	return selfLink;
 }
 
 
