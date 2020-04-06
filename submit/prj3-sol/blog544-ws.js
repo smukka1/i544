@@ -28,11 +28,153 @@ function setupRoutes(app) {
   app.use(cors());
   app.use(bodyParser.json());
   //@TODO
+
+const metaKeys=Object.keys(app.locals.meta);
+//console.log(metaKeys);
+app.get('/',doEmpty(app));
+app.get('/meta',doMeta(app));
+for(const category in metaKeys){
+//console.log('/'+metaKeys[category]);
+app.get('/'+metaKeys[category],getCategory(app,metaKeys[category]));
+}
+//app.get('/articles',getCategory(app));
+//app.get('/comments',getCategory(app));
+for(const category in metaKeys){
+app.get('/'+metaKeys[category]+'/:id',getCategoryById(app,metaKeys[category]));
+}
+for(const category in metaKeys){
+app.post('/'+metaKeys[category],createCategory(app,metaKeys[category]));
+}
+for(const category in metaKeys){
+app.patch('/'+metaKeys[category]+'/:id',updateCategory(app,metaKeys[category]));
+}
+for(const category in metaKeys){
+app.delete('/'+metaKeys[category]+'/:id',deleteCategory(app,metaKeys[category]));
+}
+//app.get('/articles/:id',getCategoryById(app));
+//app.get('/comments/:id',getCategoryById(app));
 }
 
 /****************************** Handlers *******************************/
 
 //@TODO
+function doEmpty(app){
+	return errorWrap( async function(req,res){
+		const q= req.query || {}
+		try{
+			//const results =  await app.locals;
+			res.json(results);
+		}catch(err){
+			const mapped= mapError(err);
+			res.status(mapped.status).json(mapped);
+		}
+	});
+}
+
+function doMeta(app){
+	return errorWrap( async function(req,res){
+		const q= req.query || {}
+		try{
+			const results =  await app.locals.meta;
+			res.json(results);
+		}catch(err){
+			const mapped= mapError(err);
+			res.status(mapped.status).json(mapped);
+		}
+	});
+}
+
+
+function getCategory(app,cat){
+	return errorWrap( async function(req,res){
+	 // const cat = req.path.substring(1);
+	//console.log(req.path);
+	//console.log(cat);
+		const q= req.query || {}
+		try{
+			const results =  await app.locals.model.find(cat,q);
+			res.json(results);
+		}catch(err){
+			const mapped= mapError(err);
+			res.status(mapped.status).json(mapped);
+		}
+	});
+}
+
+function getCategoryById(app,cat){
+	return errorWrap( async function(req,res){
+	//const cat = req.path.substring(1,req.path.lastIndexOf('/'));
+	const id=req.params.id;
+	//console.log(req.path);
+	//console.log(cat);
+	//console.log(id);
+	//const q= req.query || {}
+		try{
+			const results =  await app.locals.model.find(cat,{id:id});
+			res.json(results);
+		}catch(err){
+			const mapped= mapError(err);
+			res.status(mapped.status).json(mapped);
+		}
+	});
+}
+
+
+function createCategory(app,cat){
+	return errorWrap( async function(req,res){
+
+	const obj=req.body;
+	//console.log(obj);
+
+		try{
+			const results =  await app.locals.model.create(cat,obj);
+			res.json(results);
+		}catch(err){
+			const mapped= mapError(err);
+			res.status(mapped.status).json(mapped);
+		}
+	});
+}
+
+
+
+function updateCategory(app,cat){
+	return errorWrap( async function(req,res){
+
+	const id=req.params.id;
+	//console.log(id);
+	const patch=Object.assign({},req.body);
+	patch.id=id;
+	//console.log(patch);
+		try{
+			const results =  await app.locals.model.update(cat,patch);
+			res.json(results);
+		}catch(err){
+			const mapped= mapError(err);
+			res.status(mapped.status).json(mapped);
+		}
+	});
+}
+
+
+function deleteCategory(app,cat){
+	return errorWrap( async function(req,res){
+
+	const id=req.params.id;
+	//console.log(id);
+	//const patch=Object.assign({},req.body);
+	//patch.id=id;
+	//console.log(patch);
+		try{
+			const results =  await app.locals.model.remove(cat,{id:id});
+			res.json(results);
+		}catch(err){
+			const mapped= mapError(err);
+			res.status(mapped.status).json(mapped);
+		}
+	});
+}
+
 
 /**************************** Error Handling ***************************/
 
