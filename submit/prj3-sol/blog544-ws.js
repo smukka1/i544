@@ -63,7 +63,6 @@ function doEmpty(app){
 		const results={};
 		results.links=[];
 		try{
-			//const results =  await app.locals.port;
 
 			results.links.push(getselfLink(req));
 			results.links.push({name:"describe body", rel:"meta",url:requestUrl(req) + '/meta'});
@@ -100,31 +99,55 @@ function getCategory(app,cat){
 		const q= req.query || {}
 		var results_final={};
 		var links=[];
+		var count=req.query._count;
+		var index=req.query._index;
+		//console.log('paramssss',req.query);
+		//console.log('paramssss countttttttt',req.query._count);
 		try{
 			const results =  await app.locals.model.find(cat,q);
-			/*for(let i in results){
-			console.log('iddddddddd',i.id,results[i].id);
-			console.log(requestUrl(req) + '/' +results[i].id);
-			links.push(getselfLink(req)+'/'+results[i].id);
-			}
-			console.log('linkssss',links);*/
+	
 			for(let i in results){
 
 				results[i].links=[{name:"self", rel:"self",url:requestUrl(req) + '/' +results[i].id}];
 			}
 			results_final={[cat]:results};
+			links.push({name:"self", rel:"self",url:requestOriginalUrl(req)});
+			if(req.query._count && req.query._index){
+				var next=parseInt(index)+parseInt(count);
+				var url=requestOriginalUrl(req);
+				var url_m=url.substring(0,url.length-1)+next;
+				//console.log("mofiiiiii",url_m);
+				links.push({name:"next", rel:"next",url:url_m});
+			}else if(req.query._count){
+				links.push({name:"next", rel:"next",url:requestOriginalUrl(req) + '&_index='+count});
+			}else if(req.query._index){
+				var next=parseInt(index)+DEFAULT_COUNT;
+				//console.log("valueeeeeeeee",next);
+				links.push({name:"next", rel:"next",url:requestUrl(req) + '?_index='+next});
+			}else if(results.length===DEFAULT_COUNT){
+				links.push({name:"next", rel:"next",url:requestUrl(req) + '?_index='+DEFAULT_COUNT});
+			}
+			
+
+			if(req.query._count && req.query._index && parseInt(req.query._index)>0){
+				var prev=parseInt(index)-parseInt(count);
+				var url=requestOriginalUrl(req);
+				var url_m=url.substring(0,url.length-1)+prev;
+				//console.log("mofiiiiii",url_m);
+				links.push({name:"prev", rel:"prev",url:url_m});
+			}else if(parseInt(req.query._index)>0){
+				var prev=parseInt(index)-DEFAULT_COUNT;
+				//console.log("valueeeeeeeee",next);
+				links.push({name:"prev", rel:"prev",url:requestUrl(req) + '?_index='+prev});
+			}
+			//if(q.includes("index")){
+			//	inks.push({name:"prev", rel:"prev",url:requestUrl(req) + '?_index=5'});
+			//}
+			results_final.links=links;
+			results_final.next=next;
+			results_final.prev=prev;
 			res.json(results_final);
-			/*var url=requestUrl(req);
-			var links=[{name:"self", rel:"rel", url:url}];
-			//results.links.push(getselfLink(req));
-			//res.links(results.links);
-			//console.log(results.links);
-			res_obj=results;
-			res_obj.links=links;
-			console.log(res_obj);
-			//res.links(links);
-			res.json(res_obj);
-			//console.log(res);*/
+			
 		}catch(err){
 			const mapped= mapError(err);
 			res.status(mapped.status).json(mapped);
@@ -137,27 +160,13 @@ function getCategoryById(app,cat){
 	const id=req.params.id;
 	var results_final={};
 	var links=[];
-	 //results_final.links=[];
+	
 	
 		try{
 			const results =  await app.locals.model.find(cat,{id:id});
 			links.push(getselfLink(req));
 			results[0].links=links;
-			//console.log('resultsss',results);
-			/*results_final=results;
-			results_final.links.push(getselfLink(req));
-			results.links=[];
-			results.links=(getselfLink(req));
-			console.log('resultssss',results);
-			links.push(getselfLink(req));
-			results_final=results;
-			results_final.links=links;
-			console.log('resultsss_finalllll',results_final);*/
 			results_final={[cat]:results};
-			//console.log('resultsss finallll',results_final);
-			//links.push(getselfLink(req));
-			//results.links=links;
-			//results_final.[cat][0].links=links;
 			res.json(results_final);
 			
 		}catch(err){
@@ -285,6 +294,12 @@ function mapError(err) {
 function requestUrl(req) {
   const port = req.app.locals.port;
   const url = req.originalUrl.replace(/\/?(\?.*)?$/, '');
+  return `${req.protocol}://${req.hostname}:${port}${url}`;
+}
+
+function requestOriginalUrl(req) {
+  const port = req.app.locals.port;
+  const url = req.originalUrl;
   return `${req.protocol}://${req.hostname}:${port}${url}`;
 }
 
