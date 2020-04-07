@@ -112,20 +112,27 @@ function getCategory(app,cat){
 			}
 			results_final={[cat]:results};
 			links.push({name:"self", rel:"self",url:requestOriginalUrl(req)});
-			if(req.query._count && req.query._index){
+			//console.log("lengthhhhhhhh",results.length,count);&& results.length===parseInt(count)
+			
+			if(req.query._count && req.query._index && results.length===parseInt(count) ){
 				var next=parseInt(index)+parseInt(count);
 				var url=requestOriginalUrl(req);
 				var url_m=url.substring(0,url.length-1)+next;
 				//console.log("mofiiiiii",url_m);
 				links.push({name:"next", rel:"next",url:url_m});
-			}else if(req.query._count){
+			}else if(req.query._count ){
+				if(results.length===parseInt(count)){
 				links.push({name:"next", rel:"next",url:requestOriginalUrl(req) + '&_index='+count});
-			}else if(req.query._index){
+				}
+			}else if(req.query._index && results.length===DEFAULT_COUNT){
 				var next=parseInt(index)+DEFAULT_COUNT;
 				//console.log("valueeeeeeeee",next);
 				links.push({name:"next", rel:"next",url:requestUrl(req) + '?_index='+next});
-			}else if(results.length===DEFAULT_COUNT){
-				links.push({name:"next", rel:"next",url:requestUrl(req) + '?_index='+DEFAULT_COUNT});
+			}/*else if(req.query!==null){
+				links.push({name:"next", rel:"next",url:requestOriginalUrl(req) + '&_index='+DEFAULT_COUNT});
+
+			}*/else if(results.length===DEFAULT_COUNT){
+				links.push({name:"next", rel:"next",url:requestOriginalUrl(req) + '?_index='+DEFAULT_COUNT});
 			}
 			
 
